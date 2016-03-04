@@ -1,0 +1,23 @@
+
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: 5
+development:
+  <<: *default
+  database: <%= "#{ENV['PROJECT_NAME']}_development" %>
+test:
+  <<: *default
+  database: <%= "#{ENV['PROJECT_NAME']}_test" %>
+staging:
+  <<: *default
+  database: <%= ENV['PROJECT_NAME'] %>
+  host:     <%= ENV['DATABASE_HOST'] %>
+  username: <%= ENV['DATABASE_USER_NAME'] %>
+  password: <%= ENV['DATABASE_PASSWORD'] %>
+production:
+  <<: *default
+  database: <%= ENV['PROJECT_NAME'] %>
+  host:     <%= ENV['DATABASE_HOST'] %>
+  username: <%= ENV['DATABASE_USER_NAME'] %>
+  password: <%= ENV['DATABASE_PASSWORD'] %>
