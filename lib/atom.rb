@@ -1,5 +1,12 @@
 require "atom/version"
 
 module Atom
-  # Your code goes here...
+
+  class InstallGenerator < ::Rails::Generators::Base
+
+    def test
+      puts "test test"
+    end
+    
+  end
 end
