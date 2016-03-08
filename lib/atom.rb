@@ -3,11 +3,12 @@ require "rails/generators"
 
 module Atom
 
+  TARGET_ENVIRONMENTS = ["development", "test", "staging", "production"].freeze
+    
   class InstallGenerator < ::Rails::Generators::Base
     source_root File.expand_path('../templates_install', __FILE__)
 
     def add_gems
-      gem 'devise'
       gem 'enumerize'
       gem 'ridgepole'
       gem 'config'
@@ -32,8 +33,17 @@ module Atom
       end
       
       Bundler.with_clean_env do
-        run 'bundle install'
+        run 'bundle install', capture: true
       end
+    end
+
+    def config_init
+      run "#{File.join("bin", "rails")} generate config:install"
+      FileUtils.touch('config/settings/staging.yml')
+    end
+
+    def create_staging_env
+      FileUtils.copy_file('config/environments/production.rb', 'config/environments/staging.rb')
     end
     
     def create_app_core_dir
@@ -55,23 +65,11 @@ module Atom
       copy_file "config/database.yml", "config/database.yml"
     end
     
-    def create_logic_base
+    def create_core_libraries
       template "app/core/logic_base.rb", "app/core/logic_base.rb"
-    end
-
-    def create_chain_method
       template "app/core/chain_method.rb", "app/core/chain_method.rb"
-    end
-
-    def create_log_method
       template "app/core/log_method.rb", "app/core/log_method.rb"
-    end
-
-    def create_messages
       template "app/core/messages.rb", "app/core/messages.rb"
-    end
-    
-    def create_logical_delete
       template "app/models/concerns/logical_delete.rb", "app/models/concerns/logical_delete.rb"
     end
 
@@ -101,6 +99,32 @@ RUBY
       end
     end
 
+    def logger_setting
+      log_levels = {
+        "development" => ":debug",
+        "test" => ":debug",
+        "staging" => ":info",
+        "production" => ":info"
+      }
+      TARGET_ENVIRONMENTS.each do |env|
+        insert_into_file "config/environments/#{env}.rb", after: "Rails.application.configure do\n" do <<-'RUBY'
+  config.logger = ActiveSupport::Logger.new("log/#{Rails.env}.log", 'daily')
+
+RUBY
+        end
+      end
+      run "sed -i '' -e 's/config.log_level = :debug/config.log_level = :info/g' config/environments/production.rb"
+      run "sed -i '' -e 's/config.log_level = :debug/config.log_level = :info/g' config/environments/staging.rb"
+      
+      application nil, env: "development" do
+        "config.log_level = :debug"
+      end
+
+      application nil, env: "test" do
+        "config.log_level = :debug"
+      end
+    end
+
     def create_schema_file_and_dir
       template "db/Schemafile", "db/Schemafile"
       dir = "#{Rails.root}/db/schema"
@@ -108,12 +132,7 @@ RUBY
     end
 
     def rspec_init
-      run 'bin/rails generate rspec:install'
-    end
-
-    def config_init
-      run 'bin/rails generate config:install'
-      run 'touch config/settings/staging.yml'
+      run "#{File.join("bin", "rails")} generate rspec:install"
     end
 
     def overwrite_spec_helper
@@ -125,7 +144,7 @@ RUBY
     end
 
     def create_seed_dir
-      ["development", "test", "staging", "production"].each do |env|
+      TARGET_ENVIRONMENTS.each do |env|
         dir = "#{Rails.root}/db/seeds/#{env}"
         FileUtils.mkdir_p(dir) unless File.directory?(dir)
       end
@@ -142,7 +161,7 @@ RUBY
 
       insert_into_file "app/controllers/application_controller.rb", "  include DbaasAuthentication\n", after: "  include ErrorHandlers\n"
 
-      ["development", "test", "staging", "production"].each do |env|
+      TARGET_ENVIRONMENTS.each do |env|
         append_to_file "config/settings/#{env}.yml", <<RUBY
 dbaas:
   api_url:

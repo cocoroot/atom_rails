@@ -10,16 +10,13 @@ All we, developers, have to do is ... Accomplish the Owners Mind.
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'atom'
+gem 'atom', git: 'https://sdp.nbws.jp/dreg-gitlab/SPF-DREGroup/atom_rails.git'
 ```
 
 And then execute:
 
-    $ bundle
+    $ bundle install
 
-Or install it yourself as:
-
-    $ gem install atom
 
 ## Usage
 
