@@ -10,6 +10,7 @@ module Atom
       gem 'devise'
       gem 'enumerize'
       gem 'ridgepole'
+      gem 'config'
       gem 'unicorn'
       gem 'hirb'
       gem 'hirb-unicode'
@@ -86,13 +87,11 @@ module Atom
       
   include ErrorHandlers
 
-
   protected
 
   def json_request?
     request.format.json?
   end
-
 RUBY
       end
       
@@ -110,6 +109,11 @@ RUBY
 
     def rspec_init
       run 'bin/rails generate rspec:install'
+    end
+
+    def config_init
+      run 'bin/rails generate config:install'
+      run 'touch config/settings/staging.yml'
     end
 
     def overwrite_spec_helper
@@ -137,6 +141,16 @@ RUBY
       template "app/controllers/concerns/dbaas_authentication.rb", "app/controllers/concerns/dbaas_authentication.rb"
 
       insert_into_file "app/controllers/application_controller.rb", "  include DbaasAuthentication\n", after: "  include ErrorHandlers\n"
+
+      ["development", "test", "staging", "production"].each do |env|
+        append_to_file "config/settings/#{env}.yml", <<RUBY
+dbaas:
+  api_url:
+  app_id:
+  app_key:
+
+RUBY
+      end
     end
   end
 end
