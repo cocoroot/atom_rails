@@ -11,9 +11,9 @@ module LogMethod
     alias_method(orig, method)
     
     define_method(method) do |*args, &block|
-      Rails.logger.info "start: #{self.class.name}.#{method}(#{LogMethod.filtered_args(*args)})"
+      Rails.logger.info "  start: #{self.class.name}.#{method}(#{LogMethod.filtered_args(*args)})"
       result = send(orig, *args, &block)
-      Rails.logger.info "end: #{self.class.name}.#{method}"
+      Rails.logger.info "  end: #{self.class.name}.#{method}"
       result
     end
   end

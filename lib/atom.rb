@@ -164,9 +164,9 @@ RUBY
       TARGET_ENVIRONMENTS.each do |env|
         append_to_file "config/settings/#{env}.yml", <<RUBY
 dbaas:
-  api_url:
-  app_id:
-  app_key:
+  api_url: <%= ENV['DBAAS_API_URL'] %>
+  app_id:  <%= ENV['DBAAS_APP_ID'] %>
+  app_key: <%= ENV['DBAAS_APP_KEY'] %>
 
 RUBY
       end
