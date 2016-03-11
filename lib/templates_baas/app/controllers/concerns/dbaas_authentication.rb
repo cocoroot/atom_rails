@@ -28,7 +28,7 @@ module DbaasAuthentication extend ActiveSupport::Concern
     
     https = Net::HTTP.new(uri.host, uri.port)
     https.use_ssl = true
-
+    
     req = Net::HTTP::Post.new(uri.request_uri)
     req["X-Kii-AppID"] = Settings.dbaas.app_id
     req["X-Kii-AppKey"] = Settings.dbaas.app_key
@@ -41,13 +41,16 @@ module DbaasAuthentication extend ActiveSupport::Concern
     # send request
     #
     res = https.request(req)
-
+    
     #
     # make response
     #
     ret = JSON.parse(res.body)["returnedValue"]
     if ret["status"] == 'OK'
-      RequestLocals.store[:request_user] = ret["user"]
+      user_hash = ret["user"]
+
+      user_info = UserInfo.new(user_hash["userID"] , user_hash["roles"])
+      RequestLocals.store[:request_user] = user_info
     else
       raise ApplicationController::AuthenticationError, response.code
     end

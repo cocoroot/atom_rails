@@ -15,6 +15,7 @@ module Atom
       gem 'unicorn'
       gem 'hirb'
       gem 'hirb-unicode'
+      gem 'request_store_rails'
       gem_group :development, :test do
         gem 'rspec-rails'
         gem 'factory_girl_rails'
@@ -44,22 +45,34 @@ module Atom
 
     def create_staging_env
       FileUtils.copy_file('config/environments/production.rb', 'config/environments/staging.rb')
+      append_to_file 'config/secrets.yml' do <<-RUBY
+
+staging:
+  secret_key_base: <%= ENV["SECRET_KEY_BASE"] %>
+RUBY
+      end
+    end
+
+    def create_directories
+      empty_directory 'app/core'
+      empty_directory 'app/logics'
+      empty_directory 'spec/logics'
     end
     
-    def create_app_core_dir
-      dir = "#{Rails.root}/app/core"
-      FileUtils.mkdir_p(dir) unless File.directory?(dir)
-    end
+    # def create_app_core_dir
+    #   dir = "#{Rails.root}/app/core"
+    #   FileUtils.mkdir_p(dir) unless File.directory?(dir)
+    # end
     
-    def create_app_logics_dir
-      dir = "#{Rails.root}/app/logics"
-      FileUtils.mkdir_p(dir) unless File.directory?(dir)
-    end
+    # def create_app_logics_dir
+    #   dir = "#{Rails.root}/app/logics"
+    #   FileUtils.mkdir_p(dir) unless File.directory?(dir)
+    # end
     
-    def create_spec_logics_dir
-      dir = "#{Rails.root}/spec/logics"
-      FileUtils.mkdir_p(dir) unless File.directory?(dir)
-    end
+    # def create_spec_logics_dir
+    #   dir = "#{Rails.root}/spec/logics"
+    #   FileUtils.mkdir_p(dir) unless File.directory?(dir)
+    # end
 
     def overwrite_database
       copy_file "config/database.yml", "config/database.yml"
@@ -67,11 +80,6 @@ module Atom
     
     def create_core_libraries
       directory "app/core", "app/core"
-      # template "app/core/logic_base.rb", "app/core/logic_base.rb"
-      # template "app/core/chain_method.rb", "app/core/chain_method.rb"
-      # template "app/core/log_method.rb", "app/core/log_method.rb"
-      # template "app/core/messages.rb", "app/core/messages.rb"
-      # template "app/models/concerns/logical_delete.rb", "app/models/concerns/logical_delete.rb"
     end
 
     INJECT_SKIP_AUTHENTICATION_CODE = "  skip_before_action :verify_authenticity_token, if: :json_request?\n"
@@ -79,7 +87,7 @@ module Atom
       insert_into_file "app/controllers/application_controller.rb", INJECT_SKIP_AUTHENTICATION_CODE, after: "protect_from_forgery with: :exception\n"
     end
 
-    def create_error_handler
+    def error_handler
       insert_into_file "app/controllers/application_controller.rb", after: INJECT_SKIP_AUTHENTICATION_CODE do <<-'RUBY'
 
   class AuthenticationError < ActionController::ActionControllerError; end
@@ -94,10 +102,20 @@ module Atom
 RUBY
       end
       
-      template "app/controllers/concerns/error_handlers.rb", "app/controllers/concerns/error_handlers.rb"
+      copy_file "app/controllers/concerns/error_handlers.rb", "app/controllers/concerns/error_handlers.rb"
       ["401", "403", "404", "500"].each do |code|
-        template "app/views/errors/error#{code}.json.jbuilder", "app/views/errors/error#{code}.json.jbuilder"
+        copy_file "app/views/errors/error#{code}.json.jbuilder", "app/views/errors/error#{code}.json.jbuilder"
       end
+    end
+
+    def check_permission
+      insert_into_file "app/controllers/application_controller.rb", after: "  include ErrorHandlers\n" do <<-RUBY
+  include CheckPermission
+RUBY
+      end
+      copy_file "app/controllers/concerns/check_permission.rb", "app/controllers/concerns/check_permission.rb"
+      copy_file "config/permission.yml", "config/permission.yml"
+      copy_file "config/initializers/permission.rb", "config/initializers/permission.rb"
     end
 
     def logger_setting
@@ -107,27 +125,21 @@ RUBY
         "staging" => ":info",
         "production" => ":info"
       }
+
+      ["staging", "production"].each do |env|
+        comment_lines "config/environments/#{env}.rb", /config.log_level = :debug/
+      end
+
       TARGET_ENVIRONMENTS.each do |env|
-        insert_into_file "config/environments/#{env}.rb", after: "Rails.application.configure do\n" do <<-'RUBY'
-  config.logger = ActiveSupport::Logger.new("log/#{Rails.env}.log", 'daily')
-
-RUBY
+        application nil, env: env do
+          "config.logger = ActiveSupport::Logger.new(\"log/#{Rails.env}.log\", 'daily')"
+          "config.log_level = #{log_levels[env]}"
         end
-      end
-      run "sed -i '' -e 's/config.log_level = :debug/config.log_level = :info/g' config/environments/production.rb"
-      run "sed -i '' -e 's/config.log_level = :debug/config.log_level = :info/g' config/environments/staging.rb"
-      
-      application nil, env: "development" do
-        "config.log_level = :debug"
-      end
-
-      application nil, env: "test" do
-        "config.log_level = :debug"
       end
     end
 
     def create_schema_file_and_dir
-      template "db/Schemafile", "db/Schemafile"
+      copy_file "db/Schemafile", "db/Schemafile"
       dir = "#{Rails.root}/db/schema"
       FileUtils.mkdir_p(dir) unless File.directory?(dir)
     end
@@ -137,7 +149,7 @@ RUBY
     end
 
     def overwrite_spec_helper
-      template "spec/spec_helper.rb", "spec/spec_helper.rb"
+      copy_file "spec/spec_helper.rb", "spec/spec_helper.rb"
     end
 
     def gitignore_coverage
@@ -158,7 +170,7 @@ RUBY
     source_root File.expand_path('../templates_baas', __FILE__)
 
     def dbaas_authentication
-      template "app/controllers/concerns/dbaas_authentication.rb", "app/controllers/concerns/dbaas_authentication.rb"
+      copy_file "app/controllers/concerns/dbaas_authentication.rb", "app/controllers/concerns/dbaas_authentication.rb"
 
       insert_into_file "app/controllers/application_controller.rb", "  include DbaasAuthentication\n", after: "  include ErrorHandlers\n"
 

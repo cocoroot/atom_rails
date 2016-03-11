@@ -5,7 +5,7 @@ module ErrorHandlers extend ActiveSupport::Concern
     unless Rails.env.development?
       rescue_from Exception,                                  with: :emergency_alert
       rescue_from ActionController::RoutingError,             with: :rescue404
-      rescue_from ActiveRecord::RecordNotFound,               with: :rescue403
+      rescue_from ApplicationController::PermissionError,     with: :rescue403
       rescue_from ApplicationController::AuthenticationError, with: :rescue401
     end
   end

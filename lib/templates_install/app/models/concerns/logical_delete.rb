@@ -7,7 +7,7 @@ module LogicalDelete
   end
 
   included do
-    default_scope { where("removed_id is null") }
+    default_scope { where(removed_id: 0) }
   end
   
 end

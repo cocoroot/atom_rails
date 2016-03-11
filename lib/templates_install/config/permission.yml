@@ -1,0 +1,65 @@
+#=======================================
+# Format
+#---------------------------------------
+#
+# <controller_name>:
+#   <action_name>:
+#     - <role>
+#     ...
+#     - <role>
+#   <action_name>:
+#     - <role>
+#     ...
+#     - <role>
+#   ...
+# <controller_name>:
+#   ...
+#
+#=======================================
+# Example
+#---------------------------------------
+#
+# authors:       # AuthorsController
+#   create:      # :create method
+#     - manager  # "manager" role
+#   show:
+#     - manager
+#     - admin
+#     - user
+#   update:
+#     - manager
+#   destroy:
+#     - manager
+# books:
+#   create:
+#     - manager
+#   show:
+#     - manager
+#     - admin
+#     - user
+#   update:
+#     - manager
+#   destroy:
+#     - manager
+#
+
+default: &controller_default
+  index: &action_default
+    - manager
+    - admin
+    - user
+  create:
+    *action_default
+  new:
+    *action_default
+  edit:
+    *action_default
+  show:
+    *action_default
+  update:
+    *action_default
+  destroy:
+    *action_default
+
+test:
+  <<: *controller_default
