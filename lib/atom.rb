@@ -66,11 +66,12 @@ module Atom
     end
     
     def create_core_libraries
-      template "app/core/logic_base.rb", "app/core/logic_base.rb"
-      template "app/core/chain_method.rb", "app/core/chain_method.rb"
-      template "app/core/log_method.rb", "app/core/log_method.rb"
-      template "app/core/messages.rb", "app/core/messages.rb"
-      template "app/models/concerns/logical_delete.rb", "app/models/concerns/logical_delete.rb"
+      directory "app/core", "app/core"
+      # template "app/core/logic_base.rb", "app/core/logic_base.rb"
+      # template "app/core/chain_method.rb", "app/core/chain_method.rb"
+      # template "app/core/log_method.rb", "app/core/log_method.rb"
+      # template "app/core/messages.rb", "app/core/messages.rb"
+      # template "app/models/concerns/logical_delete.rb", "app/models/concerns/logical_delete.rb"
     end
 
     INJECT_SKIP_AUTHENTICATION_CODE = "  skip_before_action :verify_authenticity_token, if: :json_request?\n"
