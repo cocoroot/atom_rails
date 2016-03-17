@@ -13,11 +13,11 @@ staging:
   <<: *default
   database: <%= ENV['PROJECT_NAME'] %>
   host:     <%= ENV['DATABASE_HOST'] %>
-  username: <%= ENV['DATABASE_USER_NAME'] %>
+  username: <%= ENV['DATABASE_USER'] %>
   password: <%= ENV['DATABASE_PASSWORD'] %>
 production:
   <<: *default
   database: <%= ENV['PROJECT_NAME'] %>
   host:     <%= ENV['DATABASE_HOST'] %>
-  username: <%= ENV['DATABASE_USER_NAME'] %>
+  username: <%= ENV['DATABASE_USER'] %>
   password: <%= ENV['DATABASE_PASSWORD'] %>
