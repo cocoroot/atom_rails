@@ -8,36 +8,6 @@ module Atom
   class InstallGenerator < ::Rails::Generators::Base
     source_root File.expand_path('../templates_install', __FILE__)
 
-    def add_gems
-      gem 'enumerize'
-      gem 'ridgepole'
-      gem 'config'
-      gem 'unicorn'
-      gem 'hirb'
-      gem 'hirb-unicode'
-      gem 'request_store_rails'
-      gem_group :development, :test do
-        gem 'rspec-rails'
-        gem 'factory_girl_rails'
-        gem 'database_cleaner'
-        gem 'pry-rails'
-        gem 'pry-doc'
-        gem 'simplecov', :require => false
-      end
-      gem_group :deployment do
-        gem "capistrano"
-        gem "capistrano-rbenv", :git => 'https://github.com/capistrano/rbenv.git'
-        gem "capistrano-rails"
-        gem "capistrano-postgresql"
-        gem "capistrano-bundler"
-        gem "capistrano3-unicorn" 
-      end
-      
-      Bundler.with_clean_env do
-        run 'bundle install', capture: true
-      end
-    end
-
     def config_init
       run "#{File.join("bin", "rails")} generate config:install"
       FileUtils.touch('config/settings/staging.yml')
@@ -59,21 +29,6 @@ RUBY
       empty_directory 'spec/logics'
     end
     
-    # def create_app_core_dir
-    #   dir = "#{Rails.root}/app/core"
-    #   FileUtils.mkdir_p(dir) unless File.directory?(dir)
-    # end
-    
-    # def create_app_logics_dir
-    #   dir = "#{Rails.root}/app/logics"
-    #   FileUtils.mkdir_p(dir) unless File.directory?(dir)
-    # end
-    
-    # def create_spec_logics_dir
-    #   dir = "#{Rails.root}/spec/logics"
-    #   FileUtils.mkdir_p(dir) unless File.directory?(dir)
-    # end
-
     def overwrite_database
       copy_file "config/database.yml", "config/database.yml"
     end
@@ -109,6 +64,10 @@ RUBY
     end
 
     def check_permission
+      insert_into_file "app/controllers/application_controller.rb", after: "  class AuthenticationError < ActionController::ActionControllerError; end\n" do 
+        "class PermissionError < ActionController::ActionControllerError; end\n"
+      end
+      
       insert_into_file "app/controllers/application_controller.rb", after: "  include ErrorHandlers\n" do <<-RUBY
   include CheckPermission
 RUBY
@@ -150,6 +109,11 @@ RUBY
 
     def overwrite_spec_helper
       copy_file "spec/spec_helper.rb", "spec/spec_helper.rb"
+    end
+
+    def setup_capistrano
+      run 'bundle exec cap install STAGES=development,staging,production'
+      template "config/deploy.rb.erb", { project_name: @root.split('/').last }
     end
 
     def gitignore_coverage
