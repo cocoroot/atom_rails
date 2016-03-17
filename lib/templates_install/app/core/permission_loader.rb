@@ -1,6 +1,6 @@
 # coding: utf-8
 
-class PermissionManager
+class PermissionLoader
   attr_reader :permissions
   
   def initialize

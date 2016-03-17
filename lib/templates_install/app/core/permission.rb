@@ -1,12 +1,12 @@
 # coding: utf-8
 module Permission
   # config/initializers/permission.rb
-  # にてインスタンス化した PermissionManager を Permission が保持する
+  # にてインスタンス化した PermissionLoader を Permission が保持する
   include ActiveSupport::Configurable
-  config_accessor :manager
+  config_accessor :loader
 
   def self.all
-    self.manager.permissions
+    self.loader.permissions
   end
   
   # コントローラ名を文字列で受け取り、
@@ -34,7 +34,7 @@ module Permission
   def self.for_controller(controller)
     c = controller.underscore
     
-    permissions = self.manager.permissions
+    permissions = self.loader.permissions
     if permissions.include? c
       permissions[c]
     else
@@ -48,7 +48,7 @@ module Permission
     c = controller.underscore
     a = action.downcase
 
-    permissions = self.manager.permissions
+    permissions = self.loader.permissions
     if permissions.include? c
       if permissions[c].include? a
         return permissions[c][a]

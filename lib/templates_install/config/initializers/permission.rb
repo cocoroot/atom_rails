@@ -1,7 +1,7 @@
 
 Rails.application.config.to_prepare do
   Permission.configure do |config|
-    config.manager = PermissionManager.new
+    config.loader = PermissionLoader.new
   end
 end
 

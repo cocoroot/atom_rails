@@ -7,6 +7,8 @@ All we, developers, have to do is ... Accomplish the Owners Mind.
 
 ## Installation
 
+NOTHING you have to prepare for using atom.
+
 Add this line to your application's Gemfile:
 
 ```ruby
@@ -20,7 +22,15 @@ And then execute:
 
 ## Usage
 
-    $ bin/rails g atom:install
+    $ rails new <project_name> -d postgresql -m <template_url> -T -B
+
+template_url is to be specified by a remote url as
+
+    https://sdp.nbws.jp/dreg-gitlab/SPF-DREGroup/atom_rails/raw/master/lib/atom/rails_template.rb
+
+or by a cloned local file
+
+    <path_to_atom_rails_root>/lib/atom/rails_template.rb
 
 ## Development
 

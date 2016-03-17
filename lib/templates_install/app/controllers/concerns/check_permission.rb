@@ -9,6 +9,7 @@ module CheckPermission extend ActiveSupport::Concern
 
   def check_permission
     user_info = RequestLocals.store[:request_user] || UserInfo.new
+    RequestLocals.store[:request_user] = user_info
 
     controller = params[:controller]
     action = params[:action]

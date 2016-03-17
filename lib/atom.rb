@@ -1,10 +1,16 @@
 require "atom/version"
 require "rails/generators"
 
-module Atom
+class String
+  def ~
+    margin = scan(/^ +/).map(&:size).min
+    gsub(/^ {#{margin}}/, '')
+  end
+end
 
+module Atom
   TARGET_ENVIRONMENTS = ["development", "test", "staging", "production"].freeze
-    
+
   class InstallGenerator < ::Rails::Generators::Base
     source_root File.expand_path('../templates_install', __FILE__)
 
@@ -15,11 +21,12 @@ module Atom
 
     def create_staging_env
       FileUtils.copy_file('config/environments/production.rb', 'config/environments/staging.rb')
-      append_to_file 'config/secrets.yml' do <<-RUBY
-
-staging:
-  secret_key_base: <%= ENV["SECRET_KEY_BASE"] %>
-RUBY
+      append_to_file 'config/secrets.yml' do ~<<-RUBY
+      
+        staging:
+          secret_key_base: <%= ENV[\"SECRET_KEY_BASE\"] %>
+      
+      RUBY
       end
     end
 
@@ -43,18 +50,19 @@ RUBY
     end
 
     def error_handler
-      insert_into_file "app/controllers/application_controller.rb", after: INJECT_SKIP_AUTHENTICATION_CODE do <<-'RUBY'
-
-  class AuthenticationError < ActionController::ActionControllerError; end
+      insert_into_file "app/controllers/application_controller.rb", after: INJECT_SKIP_AUTHENTICATION_CODE do ~<<-RUBY
       
-  include ErrorHandlers
-
-  protected
-
-  def json_request?
-    request.format.json?
-  end
-RUBY
+        class AuthenticationError < ActionController::ActionControllerError; end
+        
+        include ErrorHandlers
+        
+        protected
+        
+        def json_request?
+          request.format.json?
+        end
+      
+      RUBY
       end
       
       copy_file "app/controllers/concerns/error_handlers.rb", "app/controllers/concerns/error_handlers.rb"
@@ -65,12 +73,11 @@ RUBY
 
     def check_permission
       insert_into_file "app/controllers/application_controller.rb", after: "  class AuthenticationError < ActionController::ActionControllerError; end\n" do 
-        "class PermissionError < ActionController::ActionControllerError; end\n"
+        "  class PermissionError < ActionController::ActionControllerError; end\n"
       end
       
-      insert_into_file "app/controllers/application_controller.rb", after: "  include ErrorHandlers\n" do <<-RUBY
-  include CheckPermission
-RUBY
+      insert_into_file "app/controllers/application_controller.rb", after: "  include ErrorHandlers\n" do
+        "  include CheckPermission\n"
       end
       copy_file "app/controllers/concerns/check_permission.rb", "app/controllers/concerns/check_permission.rb"
       copy_file "config/permission.yml", "config/permission.yml"
@@ -78,29 +85,30 @@ RUBY
     end
 
     def logger_setting
-      log_levels = {
-        "development" => ":debug",
-        "test" => ":debug",
-        "staging" => ":info",
-        "production" => ":info"
+      app_name = Rails.application.class.parent_name.split('/').last.underscore
+      settings = {
+        "test"        => { level: ":debug", dest: "log" },
+        "development" => { level: ":debug", dest: "log" },
+        "staging"     => { level: ":info",  dest: "/var/log/rails/#{app_name}" },
+        "production"  => { level: ":info",  dest: "/var/log/rails/#{app_name}" }
       }
 
-      ["staging", "production"].each do |env|
-        comment_lines "config/environments/#{env}.rb", /config.log_level = :debug/
-      end
-
       TARGET_ENVIRONMENTS.each do |env|
-        application nil, env: env do
-          "config.logger = ActiveSupport::Logger.new(\"log/#{Rails.env}.log\", 'daily')"
-          "config.log_level = #{log_levels[env]}"
+        gsub_file "config/environments/#{env}.rb", /config.log_level = :debug/, ''
+        application nil, env: env do ~<<-RUBY
+          config.log_level = #{settings[env][:level]}
+        RUBY
+        end
+        application nil, env: env do ~<<-RUBY
+          config.logger = ActiveSupport::Logger.new(\"#{settings[env][:dest]}/\#{Rails.env}.log\")
+        RUBY
         end
       end
     end
 
     def create_schema_file_and_dir
       copy_file "db/Schemafile", "db/Schemafile"
-      dir = "#{Rails.root}/db/schema"
-      FileUtils.mkdir_p(dir) unless File.directory?(dir)
+      empty_directory 'db/schema'
     end
 
     def rspec_init
@@ -112,8 +120,15 @@ RUBY
     end
 
     def setup_capistrano
+      app_name = Rails.application.class.parent_name.split('/').last.underscore
+      empty_directory 'config/deploy'
+      empty_directory 'lib/capistrano/tasks'
       run 'bundle exec cap install STAGES=development,staging,production'
-      template "config/deploy.rb.erb", { project_name: @root.split('/').last }
+      template "config/deploy.rb.erb", "config/deploy.rb", { project_name: app_name }
+    end
+
+    def setup_unicorn
+      copy_file "config/unicorn.rb", "config/unicorn.rb"
     end
 
     def gitignore_coverage
@@ -122,8 +137,7 @@ RUBY
 
     def create_seed_dir
       TARGET_ENVIRONMENTS.each do |env|
-        dir = "#{Rails.root}/db/seeds/#{env}"
-        FileUtils.mkdir_p(dir) unless File.directory?(dir)
+        empty_directory "#{Rails.root}/db/seeds/#{env}"
       end
     end
     
@@ -139,13 +153,13 @@ RUBY
       insert_into_file "app/controllers/application_controller.rb", "  include DbaasAuthentication\n", after: "  include ErrorHandlers\n"
 
       TARGET_ENVIRONMENTS.each do |env|
-        append_to_file "config/settings/#{env}.yml", <<RUBY
-dbaas:
-  api_url: <%= ENV['DBAAS_API_URL'] %>
-  app_id:  <%= ENV['DBAAS_APP_ID'] %>
-  app_key: <%= ENV['DBAAS_APP_KEY'] %>
-
-RUBY
+        append_to_file "config/settings/#{env}.yml", ~<<-RUBY
+          dbaas:
+            api_url: <%= ENV['DBAAS_API_URL'] %>
+            app_id:  <%= ENV['DBAAS_APP_ID'] %>
+            app_key: <%= ENV['DBAAS_APP_KEY'] %>
+      
+      RUBY
       end
     end
   end
