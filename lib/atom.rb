@@ -24,7 +24,7 @@ module Atom
         gem 'pry-doc'
         gem 'simplecov', :require => false
       end
-      gem_group :development do
+      gem_group :deployment do
         gem "capistrano"
         gem "capistrano-rbenv", :git => 'https://github.com/capistrano/rbenv.git'
         gem "capistrano-rails"
