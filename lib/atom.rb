@@ -126,7 +126,7 @@ module Atom
       empty_directory 'lib/capistrano/tasks'
       run 'bundle exec cap install STAGES=development,staging,production'
       copy_file "Capfile", "Capfile"
-      template "config/deploy.rb.erb", "config/deploy.rb", { project_name: app_name }
+      copy_file "config/deploy.rb", "config/deploy.rb"
       
       ["development", "staging"].each do |env| # production モードで直接デプロイすることはない
         append_to_file "config/deploy/#{env}.rb" do ~<<-RUBY
