@@ -30,7 +30,8 @@ set :default_env, {
   database_port:     ENV['DATABASE_PORT'],
   database_user:     ENV['DATABASE_USER'],
   database_password: ENV['DATABASE_PASSWORD'],
-  secret_key_base:   ENV[SECRET_KEY_BASE_KEY_NAME]
+  secret_key_base:   ENV[SECRET_KEY_BASE_KEY_NAME],
+  secret_key_base_stg: ENV[SECRET_KEY_BASE_KEY_NAME + "_STG"]
 }
 
 set :rbenv_path, '~/.rbenv'
@@ -120,6 +121,7 @@ namespace :deploy do
         execute "mkdir -p #{shared_path}/env"
       end
       execute "echo #{SECRET_KEY_BASE_KEY_NAME}: #{ENV[SECRET_KEY_BASE_KEY_NAME]} > #{shared_path}/env/env.yml"
+      execute "echo #{SECRET_KEY_BASE_KEY_NAME + "_STG"}: #{ENV[SECRET_KEY_BASE_KEY_NAME + "_STG"]} >> #{shared_path}/env/env.yml"
     end
   end
   
