@@ -1,9 +1,10 @@
+# coding: utf-8
 require "atom/version"
 require "rails/generators"
 
 class String
   def ~
-    margin = scan(/^ +/).map(&:size).min
+        margin = scan(/^ +/).map(&:size).min
     gsub(/^ {#{margin}}/, '')
   end
 end
@@ -22,7 +23,7 @@ module Atom
     def create_staging_env
       FileUtils.copy_file('config/environments/production.rb', 'config/environments/staging.rb')
       append_to_file 'config/secrets.yml' do ~<<-RUBY
-      
+        
         staging:
           secret_key_base: <%= ENV[\"SECRET_KEY_BASE\"] %>
       
@@ -89,8 +90,8 @@ module Atom
       settings = {
         "test"        => { level: ":debug", dest: "log" },
         "development" => { level: ":debug", dest: "log" },
-        "staging"     => { level: ":info",  dest: "/var/log/rails/#{app_name}" },
-        "production"  => { level: ":info",  dest: "/var/log/rails/#{app_name}" }
+        "staging"     => { level: ":info",  dest: "/var/log/#{app_name}/rails" },
+        "production"  => { level: ":info",  dest: "/var/log/#{app_name}/rails" }
       }
 
       TARGET_ENVIRONMENTS.each do |env|
@@ -124,7 +125,17 @@ module Atom
       empty_directory 'config/deploy'
       empty_directory 'lib/capistrano/tasks'
       run 'bundle exec cap install STAGES=development,staging,production'
+      copy_file "Capfile", "Capfile"
       template "config/deploy.rb.erb", "config/deploy.rb", { project_name: app_name }
+      
+      ["development", "staging"].each do |env| # production モードで直接デプロイすることはない
+        append_to_file "config/deploy/#{env}.rb" do ~<<-RUBY
+          server ENV['TARGET_SERVER'], user: 'comet', roles: %w{app db}
+          set :rails_env, :#{env}
+          set :unicorn_rack_env, :#{env}
+        RUBY
+        end
+      end
     end
 
     def setup_unicorn
@@ -139,6 +150,12 @@ module Atom
       TARGET_ENVIRONMENTS.each do |env|
         empty_directory "#{Rails.root}/db/seeds/#{env}"
       end
+    end
+
+    def initial_commit
+      run 'git init .', capture: true
+      run 'git add .', capture: true
+      run 'git commit -a -m "initial commit."', capture: true
     end
     
   end
