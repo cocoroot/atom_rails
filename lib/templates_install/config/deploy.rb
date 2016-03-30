@@ -17,7 +17,7 @@ set :branch, 'release'
 set :deploy_to, "/var/www/#{ENV['PROJECT_NAME']}"
 set :scm, :git
 set :format, :pretty
-set :log_level, :debug
+set :log_level, :info
 set :pty, true # default is false
 set :linked_files, fetch(:linked_files, []).push('config/database.yml', 'config/secrets.yml')
 
@@ -86,6 +86,19 @@ namespace :db do
     end
   end
 
+  desc 'Reset Database Schema (Drop -> Create -> Ridgepole)'
+  task :reset do
+    on roles :db do
+      within current_path do
+        invoke 'unicorn:stop'
+        invoke 'db:drop'
+        invoke 'db:create'
+        invoke 'db:ridgepole'
+        invoke 'unicorn:start'
+      end
+    end
+  end
+
 end
 
 namespace :deploy do
@@ -134,11 +147,18 @@ namespace :deploy do
   task :restart do
     invoke 'unicorn:restart'
   end
+
+  desc 'Update schema'
+  task :update_schema do
+    invoke 'db:ridgepole'
+  end
   
-  after 'deploy:publishing', 'deploy:restart'
   before 'deploy:upload', 'deploy:directories'
   before 'deploy:starting', 'deploy:upload'
+  before 'deploy:starting', 'deploy:update_key'
   after 'deploy:finishing', 'deploy:cleanup'
+  after 'deploy:publishing', 'deploy:restart'
+  after 'deploy:publishing', 'deploy:update_schema'
 
 end
 

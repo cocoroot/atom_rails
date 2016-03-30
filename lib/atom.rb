@@ -25,7 +25,7 @@ module Atom
       append_to_file 'config/secrets.yml' do ~<<-RUBY
         
         staging:
-          secret_key_base: <%= ENV[\"SECRET_KEY_BASE\"] %>
+          secret_key_base: <%= ENV[\"SECRET_KEY_BASE_STG\"] %>
       
       RUBY
       end
