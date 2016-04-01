@@ -155,7 +155,7 @@ namespace :deploy do
   
   before 'deploy:upload', 'deploy:directories'
   before 'deploy:starting', 'deploy:upload'
-  before 'deploy:starting', 'deploy:update_key'
+  before 'deploy:starting', 'deploy:set_key'
   after 'deploy:finishing', 'deploy:cleanup'
   after 'deploy:publishing', 'deploy:restart'
   after 'deploy:publishing', 'deploy:update_schema'
