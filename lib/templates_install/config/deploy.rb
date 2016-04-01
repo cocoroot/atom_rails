@@ -2,7 +2,8 @@
 # config valid only for current version of Capistrano
 lock '3.4.0'
 
-REPO_URL = "#{ENV['GIT_REPOSITORY_URL']}".gsub('https://', "https://#{ENV['GIT_HTTPS_USERNAME']}:#{ENV['GIT_HTTPS_PASSWORD']}@")
+#REPO_URL = "#{ENV['GIT_REPOSITORY_URL']}".gsub('https://', "https://#{ENV['GIT_HTTPS_USERNAME']}:#{ENV['GIT_HTTPS_PASSWORD']}@")
+REPO_URL = ENV['GIT_REPOSITORY_URL']
 
 # 環境変数名（キー）を設定
 # 同一サーバにデプロイしても上書きされないよう、必ずアプリ毎に変える
@@ -14,7 +15,7 @@ set :application, ENV['PROJECT_NAME']
 set :repo_url, REPO_URL
 set :repo_url_, ENV['GIT_REPOSITORY_URL']
 set :branch, 'release'
-set :deploy_to, "/var/www/#{ENV['PROJECT_NAME']}"
+set :deploy_to, "/var/www/projects/#{ENV['PROJECT_NAME']}"
 set :scm, :git
 set :format, :pretty
 set :log_level, :info
@@ -155,7 +156,7 @@ namespace :deploy do
   
   before 'deploy:upload', 'deploy:directories'
   before 'deploy:starting', 'deploy:upload'
-  before 'deploy:starting', 'deploy:set_key'
+  after 'deploy:finishing', 'deploy:set_key'
   after 'deploy:finishing', 'deploy:cleanup'
   after 'deploy:publishing', 'deploy:restart'
   after 'deploy:publishing', 'deploy:update_schema'
