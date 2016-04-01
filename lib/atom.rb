@@ -26,7 +26,7 @@ module Atom
         
         staging:
           secret_key_base: <%= ENV[\"SECRET_KEY_BASE_STG\"] %>
-      
+        
       RUBY
       end
     end
