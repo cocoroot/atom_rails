@@ -45,9 +45,7 @@
 
 default: &controller_default
   index: &action_default
-    - manager
-    - admin
-    - user
+    - unauthenticated
   create:
     *action_default
   new:
@@ -61,5 +59,8 @@ default: &controller_default
   destroy:
     *action_default
 
-test:
-  <<: *controller_default
+#
+# SAMPLE
+#
+# authors:
+#   <<: *controller_default
