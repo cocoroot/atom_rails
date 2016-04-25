@@ -121,13 +121,12 @@ module Atom
     end
 
     def setup_capistrano
-      app_name = Rails.application.class.parent_name.split('/').last.underscore
       empty_directory 'config/deploy'
       empty_directory 'lib/capistrano/tasks'
       run 'bundle exec cap install STAGES=development,staging,production'
 
       copy_file 'Capfile', 'Capfile'
-      template 'config/deploy.rb.erb', 'config/deploy.rb', project_name: app_name
+      copy_file 'config/deploy.rb', 'config/deploy.rb'
 
       %w(development staging).each do |env| # production モードで直接デプロイすることはない
         append_to_file "config/deploy/#{env}.rb" do ~<<-RUBY
