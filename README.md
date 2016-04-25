@@ -5,32 +5,35 @@ Atom is an extension package for Ruby on Rails web-application framework in orde
 All we, developers, have to do is ... Accomplish the Owners Mind.
 
 
-## Installation
+## Usage - for Basic (API based) web application
 
-NOTHING you have to prepare for using atom.
+clone this repository into your <workspace>
 
-Add this line to your application's Gemfile:
+    $ cd <workspace>
+    $ git clone https://sdp.nbws.jp/dreg-gitlab/SPF-DREGroup/atom_rails.git
 
-```ruby
-gem 'atom', git: 'https://sdp.nbws.jp/dreg-gitlab/SPF-DREGroup/atom_rails.git'
-```
+then, create new rails application
 
-And then execute:
+    $ rails new <project_name> -d postgresql -m <path_to_template_file> -T -B
 
-    $ bundle install
+have <path_to_template_file> indicate to cloned local file as
+
+    <workspace>/atom_rails/lib/atom/rails_template.rb
+
+sample:
+
+    $ rails new sample_app -d postgresql -m <path_to_atom_rails>/lib/atom/rails_template.rb -T -B
+
+## Usage - for DBaaS authentication
+
+after installing atom along the step above, execute command below in your rails project directory
+
+    $ bin/rails g atom:dbaas 
 
 
-## Usage
+## Usage - for Frontend(HTML/JS) framework
 
-    $ rails new <project_name> -d postgresql -m <template_url> -T -B
-
-template_url is to be specified by a remote url as
-
-    https://sdp.nbws.jp/dreg-gitlab/SPF-DREGroup/atom_rails/raw/master/lib/atom/rails_template.rb
-
-or by a cloned local file
-
-    <path_to_atom_rails_root>/lib/atom/rails_template.rb
+    $ bin/rails g atom:frontend
 
 ## Development
 
