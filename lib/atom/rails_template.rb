@@ -1,6 +1,5 @@
 
-#gem 'atom', git: 'https://sdp.nbws.jp/dreg-gitlab/SPF-DREGroup/atom_rails.git'
-gem 'atom', path: '../atom'
+gem 'atom', git: 'https://sdp.nbws.jp/dreg-gitlab/SPF-DREGroup/atom_rails.git'
 
 gem 'enumerize'
 gem 'ridgepole'
