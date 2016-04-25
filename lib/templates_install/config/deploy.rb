@@ -2,7 +2,8 @@
 # config valid only for current version of Capistrano
 lock '3.4.0'
 
-REPO_URL = "#{ENV['GIT_REPOSITORY_URL']}".gsub('https://', "https://#{ENV['GIT_HTTPS_USERNAME']}:#{ENV['GIT_HTTPS_PASSWORD']}@")
+#REPO_URL = "#{ENV['GIT_REPOSITORY_URL']}".gsub('https://', "https://#{ENV['GIT_HTTPS_USERNAME']}:#{ENV['GIT_HTTPS_PASSWORD']}@")
+REPO_URL = ENV['GIT_REPOSITORY_URL']
 
 # 環境変数名（キー）を設定
 # 同一サーバにデプロイしても上書きされないよう、必ずアプリ毎に変える
@@ -10,11 +11,11 @@ REPO_URL = "#{ENV['GIT_REPOSITORY_URL']}".gsub('https://', "https://#{ENV['GIT_H
 SECRET_KEY_BASE_KEY_NAME = 'SECRET_KEY_BASE'
 
 #################### Settings ####################
-set :application, ENV['PROJECT_NAME']
+set :application, ENV['APP_NAME']
 set :repo_url, REPO_URL
 set :repo_url_, ENV['GIT_REPOSITORY_URL']
 set :branch, 'release'
-set :deploy_to, "/var/www/#{ENV['PROJECT_NAME']}"
+set :deploy_to, "/var/www/projects/#{ENV['APP_NAME']}"
 set :scm, :git
 set :format, :pretty
 set :log_level, :debug
@@ -25,19 +26,21 @@ set :default_env, {
   rbenv_root:        "~/.rbenv",
   path:              "~/.rbenv/shims:~/.rbenv/bin:$PATH",
   project_name:      ENV['PROJECT_NAME'],
+  app_name:          ENV['APP_NAME'],
   database_name:     ENV['DATABASE_NAME'],
   database_host:     ENV['DATABASE_HOST'],
   database_port:     ENV['DATABASE_PORT'],
   database_user:     ENV['DATABASE_USER'],
   database_password: ENV['DATABASE_PASSWORD'],
-  secret_key_base:   ENV[SECRET_KEY_BASE_KEY_NAME]
+  secret_key_base:   ENV[SECRET_KEY_BASE_KEY_NAME],
+  secret_key_base_stg: ENV[SECRET_KEY_BASE_KEY_NAME + "_STG"]
 }
 
 set :rbenv_path, '~/.rbenv'
 
 set :keep_releases, 1 # default is 5
 set :unicorn_config_path, "config/unicorn.rb"
-set :unicorn_pid, "/var/run/#{ENV['PROJECT_NAME']}/unicorn/unicorn.pid"
+set :unicorn_pid, "/var/run/#{ENV['APP_NAME']}/unicorn/unicorn.pid"
 
 
 #################### Tasks ####################
@@ -59,7 +62,9 @@ namespace :db do
     on roles :db do
       with rails_env: fetch(:rails_env) do
         within current_path do
-          execute :bundle, :exec, :rake, 'db:create'
+          if test "[ ! psql -h #{fetch(:database_host)} -U #{fetch(:database_user)} -c \"select * from pg_database where datname='#{fetch(:database_name)}'\" | grep -q #{fetch(:database_name)} ]"
+            execute :bundle, :exec, :rake, 'db:create'
+          end
         end
       end
     end
@@ -70,7 +75,9 @@ namespace :db do
     on roles :db do
       with rails_env: fetch(:rails_env) do
         within current_path do
-          execute :bundle, :exec, :rake, 'db:drop'
+          if test "[ ! psql -h #{fetch(:database_host)} -U #{fetch(:database_user)} -c \"select * from pg_database where datname='#{fetch(:database_name)}'\" | grep -q #{fetch(:database_name)} ]"
+            execute :bundle, :exec, :rake, 'db:drop'
+          end
         end
       end
     end
@@ -81,6 +88,19 @@ namespace :db do
     on roles :db  do
       within current_path do
         execute :bundle, :exec, :ridgepole, "-E #{fetch(:stage)} -c config/database.yml -f db/Schemafile --apply"
+      end
+    end
+  end
+
+  desc 'Reset Database Schema (Drop -> Create -> Ridgepole)'
+  task :reset do
+    on roles :db do
+      within current_path do
+        invoke 'unicorn:stop'
+        invoke 'db:drop'
+        invoke 'db:create'
+        invoke 'db:ridgepole'
+        invoke 'unicorn:start'
       end
     end
   end
@@ -101,7 +121,6 @@ namespace :deploy do
       end
     end
   end
-
   
   task :upload do
     on roles(:app) do |host|
@@ -116,10 +135,13 @@ namespace :deploy do
   desc 'Set secret_key_base for rails'
   task :set_key do
     on roles(:app) do
-      if test " [ ! -d #{shared_path}/env] "
-        execute "mkdir -p #{shared_path}/env"
+      within current_path do
+        if test "[ ! -d #{shared_path}/env ]"
+          execute "mkdir -p #{shared_path}/env"
+        end
+        execute "echo #{SECRET_KEY_BASE_KEY_NAME}: #{ENV['SECRET_KEY_BASE']} > #{shared_path}/env/env.yml"
+        execute "echo #{SECRET_KEY_BASE_KEY_NAME + "_STG"}: #{ENV['SECRET_KEY_BASE_STG']} >> #{shared_path}/env/env.yml"
       end
-      execute "echo #{SECRET_KEY_BASE_KEY_NAME}: #{ENV[SECRET_KEY_BASE_KEY_NAME]} > #{shared_path}/env/env.yml"
     end
   end
   
@@ -132,11 +154,19 @@ namespace :deploy do
   task :restart do
     invoke 'unicorn:restart'
   end
+
+  desc 'Update schema'
+  task :update_schema do
+    invoke 'db:ridgepole'
+  end
   
-  after 'deploy:publishing', 'deploy:restart'
   before 'deploy:upload', 'deploy:directories'
   before 'deploy:starting', 'deploy:upload'
   after 'deploy:finishing', 'deploy:cleanup'
+  after 'deploy:publishing', 'deploy:set_key'
+  after 'deploy:set_key', 'db:create'
+  after 'db:create', 'deploy:update_schema'
+  after 'deploy:update_schema', 'deploy:restart'
 
 end
 

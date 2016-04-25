@@ -25,8 +25,8 @@ module Atom
       append_to_file 'config/secrets.yml' do ~<<-RUBY
         
         staging:
-          secret_key_base: <%= ENV[\"SECRET_KEY_BASE\"] %>
-      
+          secret_key_base: <%= ENV[\"SECRET_KEY_BASE_STG\"] %>
+        
       RUBY
       end
     end
@@ -125,6 +125,7 @@ module Atom
       empty_directory 'config/deploy'
       empty_directory 'lib/capistrano/tasks'
       run 'bundle exec cap install STAGES=development,staging,production'
+
       copy_file 'Capfile', 'Capfile'
       template 'config/deploy.rb.erb', 'config/deploy.rb', project_name: app_name
 
