@@ -242,6 +242,7 @@ module Atom
       copy_file "#{redux_root_dir}/components/App.js", "#{redux_root_dir}/components/App.js"
       copy_file "#{redux_root_dir}/actions/index.js", "#{redux_root_dir}/actions/index.js"
       copy_file "#{redux_root_dir}/reducers/index.js", "#{redux_root_dir}/reducers/index.js"
+      copy_file "#{redux_root_dir}/store/configureStore.js", "#{redux_root_dir}/store/configureStore.js"
     end
   end
 end
