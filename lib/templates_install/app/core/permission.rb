@@ -53,6 +53,14 @@ module Permission
       if permissions[c].include? a
         return permissions[c][a]
       end
+    else
+      # コントローラ個別の認可定義がない場合デフォルトを探す
+      default = 'default'
+      if permissions.include? default
+        if permissions[default].include? a
+          return permissions[default][a]
+        end
+      end
     end
     []
   end
