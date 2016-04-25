@@ -10,13 +10,13 @@ class String
 end
 
 module Atom
-  TARGET_ENVIRONMENTS = ["development", "test", "staging", "production"].freeze
+  TARGET_ENVIRONMENTS = ['development', 'test', 'staging', 'production'].freeze
 
   class InstallGenerator < ::Rails::Generators::Base
     source_root File.expand_path('../templates_install', __FILE__)
 
     def config_init
-      run "#{File.join("bin", "rails")} generate config:install"
+      run "#{File.join('bin', 'rails')} generate config:install"
       FileUtils.touch('config/settings/staging.yml')
     end
 
@@ -38,20 +38,20 @@ module Atom
     end
     
     def overwrite_database
-      copy_file "config/database.yml", "config/database.yml"
+      copy_file 'config/database.yml', 'config/database.yml'
     end
     
     def create_core_libraries
-      directory "app/core", "app/core"
+      directory 'app/core', 'app/core'
     end
 
     INJECT_SKIP_AUTHENTICATION_CODE = "  skip_before_action :verify_authenticity_token, if: :json_request?\n"
     def inject_skip_authentication_with_json_format
-      insert_into_file "app/controllers/application_controller.rb", INJECT_SKIP_AUTHENTICATION_CODE, after: "protect_from_forgery with: :exception\n"
+      insert_into_file 'app/controllers/application_controller.rb', INJECT_SKIP_AUTHENTICATION_CODE, after: "protect_from_forgery with: :exception\n"
     end
 
     def error_handler
-      insert_into_file "app/controllers/application_controller.rb", after: INJECT_SKIP_AUTHENTICATION_CODE do ~<<-RUBY
+      insert_into_file 'app/controllers/application_controller.rb', after: INJECT_SKIP_AUTHENTICATION_CODE do ~<<-RUBY
       
         class AuthenticationError < ActionController::ActionControllerError; end
         
@@ -66,32 +66,32 @@ module Atom
       RUBY
       end
       
-      copy_file "app/controllers/concerns/error_handlers.rb", "app/controllers/concerns/error_handlers.rb"
-      ["401", "403", "404", "500"].each do |code|
+      copy_file 'app/controllers/concerns/error_handlers.rb', 'app/controllers/concerns/error_handlers.rb'
+      ['401', '403', '404', '500'].each do |code|
         copy_file "app/views/errors/error#{code}.json.jbuilder", "app/views/errors/error#{code}.json.jbuilder"
       end
     end
 
     def check_permission
-      insert_into_file "app/controllers/application_controller.rb", after: "  class AuthenticationError < ActionController::ActionControllerError; end\n" do 
+      insert_into_file 'app/controllers/application_controller.rb', after: "  class AuthenticationError < ActionController::ActionControllerError; end\n" do 
         "  class PermissionError < ActionController::ActionControllerError; end\n"
       end
       
-      insert_into_file "app/controllers/application_controller.rb", after: "  include ErrorHandlers\n" do
+      insert_into_file 'app/controllers/application_controller.rb', after: "  include ErrorHandlers\n" do
         "  include CheckPermission\n"
       end
-      copy_file "app/controllers/concerns/check_permission.rb", "app/controllers/concerns/check_permission.rb"
-      copy_file "config/permission.yml", "config/permission.yml"
-      copy_file "config/initializers/permission.rb", "config/initializers/permission.rb"
+      copy_file 'app/controllers/concerns/check_permission.rb', 'app/controllers/concerns/check_permission.rb'
+      copy_file 'config/permission.yml', 'config/permission.yml'
+      copy_file 'config/initializers/permission.rb', 'config/initializers/permission.rb'
     end
 
     def logger_setting
       app_name = Rails.application.class.parent_name.split('/').last.underscore
       settings = {
-        "test"        => { level: ":debug", dest: "log" },
-        "development" => { level: ":debug", dest: "log" },
-        "staging"     => { level: ":info",  dest: "/var/log/#{app_name}/rails" },
-        "production"  => { level: ":info",  dest: "/var/log/#{app_name}/rails" }
+        'test'        => { level: ':debug', dest: 'log' },
+        'development' => { level: ':debug', dest: 'log' },
+        'staging'     => { level: ':info',  dest: '/var/log/#{app_name}/rails' },
+        'production'  => { level: ':info',  dest: '/var/log/#{app_name}/rails' }
       }
 
       TARGET_ENVIRONMENTS.each do |env|
@@ -108,16 +108,16 @@ module Atom
     end
 
     def create_schema_file_and_dir
-      copy_file "db/Schemafile", "db/Schemafile"
+      copy_file 'db/Schemafile', 'db/Schemafile'
       empty_directory 'db/schema'
     end
 
     def rspec_init
-      run "#{File.join("bin", "rails")} generate rspec:install"
+      run "#{File.join('bin', 'rails')} generate rspec:install"
     end
 
     def overwrite_spec_helper
-      copy_file "spec/spec_helper.rb", "spec/spec_helper.rb"
+      copy_file 'spec/spec_helper.rb', 'spec/spec_helper.rb'
     end
 
     def setup_capistrano
@@ -125,12 +125,12 @@ module Atom
       empty_directory 'config/deploy'
       empty_directory 'lib/capistrano/tasks'
       run 'bundle exec cap install STAGES=development,staging,production'
-      copy_file "Capfile", "Capfile"
-      template "config/deploy.rb.erb", "config/deploy.rb", { project_name: app_name }
-      
-      ["development", "staging"].each do |env| # production モードで直接デプロイすることはない
+      copy_file 'Capfile', 'Capfile'
+      template 'config/deploy.rb.erb', 'config/deploy.rb', project_name: app_name
+
+      %w('development', 'staging').each do |env| # production モードで直接デプロイすることはない
         append_to_file "config/deploy/#{env}.rb" do ~<<-RUBY
-          server ENV['TARGET_SERVER'], user: 'comet', roles: %w{app db}
+          server ENV['TARGET_SERVER'], user: 'comet', roles: %w(app db)
           set :rails_env, :#{env}
           set :unicorn_rack_env, :#{env}
         RUBY
@@ -139,7 +139,7 @@ module Atom
     end
 
     def setup_unicorn
-      copy_file "config/unicorn.rb", "config/unicorn.rb"
+      copy_file 'config/unicorn.rb', 'config/unicorn.rb'
     end
 
     def gitignore_coverage
@@ -157,17 +157,15 @@ module Atom
       run 'git add .', capture: true
       run 'git commit -a -m "initial commit."', capture: true
     end
-    
   end
 
-  
   class DbaasGenerator < ::Rails::Generators::Base
     source_root File.expand_path('../templates_baas', __FILE__)
 
     def dbaas_authentication
-      copy_file "app/controllers/concerns/dbaas_authentication.rb", "app/controllers/concerns/dbaas_authentication.rb"
+      copy_file 'app/controllers/concerns/dbaas_authentication.rb', 'app/controllers/concerns/dbaas_authentication.rb'
 
-      insert_into_file "app/controllers/application_controller.rb", "  include DbaasAuthentication\n", after: "  include ErrorHandlers\n"
+      insert_into_file 'app/controllers/application_controller.rb', "  include DbaasAuthentication\n", after: "  include ErrorHandlers\n"
 
       TARGET_ENVIRONMENTS.each do |env|
         append_to_file "config/settings/#{env}.yml", ~<<-RUBY
@@ -178,6 +176,70 @@ module Atom
       
       RUBY
       end
+    end
+  end
+
+  class FrontendGenerator < ::Rails::Generators::Base
+    source_root File.expand_path('../template_frontend', __FILE__)
+
+    FRONTEND_JAVASCRIPT_PATH = 'app/assets/javascripts'
+
+    def add_gem
+      gem 'react-rails'
+      gem 'browserify-rails'
+      run 'bundle install --quiet'
+    end
+
+    def install_npm_package
+      run 'npm init -y'
+      packages_save_dev = %w(browserify browserify-incremental babelify babel-preset-es2015 babel-preset-react babel-preset-stage-2).join(' ')
+      run "npm -i #{packages_save_dev}"
+      packages_save = %w(react redux react-redux redux-thunk)
+      run "npm -i #{packages_save}"
+    end
+
+    def application_config
+      application do
+        "config.browserify_rails.commandline_options = '-t babelify'"
+      end
+    end
+
+    def gitignore_node_modules
+      append_to_file '.gitignore', '/node_modules'
+    end
+
+    def generate_react
+      generate 'react:install', '-f'
+    end
+
+    def setting_load_path_for_javascript_libraries
+      gsub_file "#{FRONTEND_JAVASCRIPT_PATH}/application.js", %r{\/\/= require_tree .}, ''
+      copy_file "#{FRONTEND_JAVASCRIPT_PATH}/components.js", "#{FRONTEND_JAVASCRIPT_PATH}/components.js"
+    end
+
+    def create_babelrc
+      create_file '.babelrc' do ~<<-RUBY
+        {
+          "presets": ["es2015", "react", "stage-2"]
+        }
+      RUBY
+      end
+    end
+
+    def create_directories_for_redux_framework
+      redux_root_dir = "#{Rails.root}/#{FRONTEND_JAVASCRIPT_PATH}/components"
+      directories = %w(actions components containers reducers store)
+      directories.each do |dir|
+        empty_directory "#{redux_root_dir}/#{dir}"
+      end
+    end
+
+    def create_framework_js
+      copy_file "#{FRONTEND_JAVASCRIPT_PATH}/containers/AppContainer.js", "#{FRONTEND_JAVASCRIPT_PATH}/containers/AppContainer.js"
+      copy_file "#{FRONTEND_JAVASCRIPT_PATH}/containers/Root.js", "#{FRONTEND_JAVASCRIPT_PATH}/containers/Root.js"
+      copy_file "#{FRONTEND_JAVASCRIPT_PATH}/components/App.js", "#{FRONTEND_JAVASCRIPT_PATH}/components/App.js"
+      copy_file "#{FRONTEND_JAVASCRIPT_PATH}/actions/index.js", "#{FRONTEND_JAVASCRIPT_PATH}/actions/index.js"
+      copy_file "#{FRONTEND_JAVASCRIPT_PATH}/reducers/index.js", "#{FRONTEND_JAVASCRIPT_PATH}/reducers/index.js"
     end
   end
 end
