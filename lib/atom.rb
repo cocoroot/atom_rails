@@ -214,6 +214,7 @@ module Atom
 
     def setting_load_path_for_javascript_libraries
       gsub_file "#{FRONTEND_JAVASCRIPT_PATH}/application.js", %r{\/\/= require_tree .}, ''
+      gsub_file "#{FRONTEND_JAVASCRIPT_PATH}/application.js", %r{\/\/= react}, ''
       copy_file "#{FRONTEND_JAVASCRIPT_PATH}/components.js", "#{FRONTEND_JAVASCRIPT_PATH}/components.js"
     end
 
