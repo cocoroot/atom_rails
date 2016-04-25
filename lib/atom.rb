@@ -192,7 +192,7 @@ module Atom
 
     def install_npm_package
       run 'npm init -y'
-      packages_save_dev = %w(browserify browserify-incremental babelify babel-preset-es2015 babel-preset-react babel-preset-stage-2).join(' ')
+      packages_save_dev = %w(browserify browserify-incremental babelify babel-preset-es2015 babel-preset-react babel-preset-stage-2 eslint eslint-plugin-react eslint-config-rackt babel-eslint).join(' ')
       run "npm i -D #{packages_save_dev}"
       packages_save = %w(react react-dom redux react-redux redux-thunk).join(' ')
       run "npm i -S #{packages_save}"
@@ -204,8 +204,13 @@ module Atom
       end
     end
 
+    def eslint_settings
+      copy_file '.eslintrc.js', '.eslintrc.js'
+    end
+
     def gitignore_node_modules
       append_to_file '.gitignore', "/node_modules\n"
+      append_to_file '.gitignore', '.tern-port'
     end
 
     def generate_react
