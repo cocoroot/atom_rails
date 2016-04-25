@@ -143,7 +143,7 @@ module Atom
     end
 
     def gitignore_coverage
-      append_to_file '.gitignore', '/coverage'
+      append_to_file '.gitignore', "/coverage\n"
     end
 
     def create_seed_dir
@@ -194,7 +194,7 @@ module Atom
       run 'npm init -y'
       packages_save_dev = %w(browserify browserify-incremental babelify babel-preset-es2015 babel-preset-react babel-preset-stage-2).join(' ')
       run "npm i -D #{packages_save_dev}"
-      packages_save = %w(react redux react-redux redux-thunk).join(' ')
+      packages_save = %w(react react-dom redux react-redux redux-thunk).join(' ')
       run "npm i -S #{packages_save}"
     end
 
@@ -205,7 +205,7 @@ module Atom
     end
 
     def gitignore_node_modules
-      append_to_file '.gitignore', '/node_modules'
+      append_to_file '.gitignore', "/node_modules\n"
     end
 
     def generate_react
