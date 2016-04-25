@@ -128,7 +128,7 @@ module Atom
       copy_file 'Capfile', 'Capfile'
       template 'config/deploy.rb.erb', 'config/deploy.rb', project_name: app_name
 
-      %w('development', 'staging').each do |env| # production モードで直接デプロイすることはない
+      %w(development staging).each do |env| # production モードで直接デプロイすることはない
         append_to_file "config/deploy/#{env}.rb" do ~<<-RUBY
           server ENV['TARGET_SERVER'], user: 'comet', roles: %w(app db)
           set :rails_env, :#{env}
@@ -180,7 +180,7 @@ module Atom
   end
 
   class FrontendGenerator < ::Rails::Generators::Base
-    source_root File.expand_path('../template_frontend', __FILE__)
+    source_root File.expand_path('../templates_frontend', __FILE__)
 
     FRONTEND_JAVASCRIPT_PATH = 'app/assets/javascripts'
 
@@ -193,9 +193,9 @@ module Atom
     def install_npm_package
       run 'npm init -y'
       packages_save_dev = %w(browserify browserify-incremental babelify babel-preset-es2015 babel-preset-react babel-preset-stage-2).join(' ')
-      run "npm -i #{packages_save_dev}"
-      packages_save = %w(react redux react-redux redux-thunk)
-      run "npm -i #{packages_save}"
+      run "npm i -D #{packages_save_dev}"
+      packages_save = %w(react redux react-redux redux-thunk).join(' ')
+      run "npm i -S #{packages_save}"
     end
 
     def application_config
@@ -228,18 +228,20 @@ module Atom
 
     def create_directories_for_redux_framework
       redux_root_dir = "#{Rails.root}/#{FRONTEND_JAVASCRIPT_PATH}/components"
-      directories = %w(actions components containers reducers store)
-      directories.each do |dir|
+      empty_directory redux_root_dir
+      sub_directories = %w(actions components containers reducers store)
+      sub_directories.each do |dir|
         empty_directory "#{redux_root_dir}/#{dir}"
       end
     end
 
     def create_framework_js
-      copy_file "#{FRONTEND_JAVASCRIPT_PATH}/containers/AppContainer.js", "#{FRONTEND_JAVASCRIPT_PATH}/containers/AppContainer.js"
-      copy_file "#{FRONTEND_JAVASCRIPT_PATH}/containers/Root.js", "#{FRONTEND_JAVASCRIPT_PATH}/containers/Root.js"
-      copy_file "#{FRONTEND_JAVASCRIPT_PATH}/components/App.js", "#{FRONTEND_JAVASCRIPT_PATH}/components/App.js"
-      copy_file "#{FRONTEND_JAVASCRIPT_PATH}/actions/index.js", "#{FRONTEND_JAVASCRIPT_PATH}/actions/index.js"
-      copy_file "#{FRONTEND_JAVASCRIPT_PATH}/reducers/index.js", "#{FRONTEND_JAVASCRIPT_PATH}/reducers/index.js"
+      redux_root_dir = "#{FRONTEND_JAVASCRIPT_PATH}/components"
+      copy_file "#{redux_root_dir}/containers/AppContainer.js", "#{redux_root_dir}/containers/AppContainer.js"
+      copy_file "#{redux_root_dir}/containers/Root.js", "#{redux_root_dir}/containers/Root.js"
+      copy_file "#{redux_root_dir}/components/App.js", "#{redux_root_dir}/components/App.js"
+      copy_file "#{redux_root_dir}/actions/index.js", "#{redux_root_dir}/actions/index.js"
+      copy_file "#{redux_root_dir}/reducers/index.js", "#{redux_root_dir}/reducers/index.js"
     end
   end
 end
