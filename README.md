@@ -16,7 +16,7 @@ then, create new rails application
 
     $ rails new <project_name> -d postgresql -m <path_to_template_file> -T -B
 
-have <path_to_template_file> indicate to cloned local file as
+have &lt;path_to_template_file&gt; indicate to cloned local file as
 
     <workspace>/atom_rails/lib/atom/rails_template.rb
 
