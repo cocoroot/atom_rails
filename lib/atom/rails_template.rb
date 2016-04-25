@@ -17,12 +17,12 @@ gem_group :development, :test do
   gem 'simplecov', :require => false
 end
 gem_group :deployment do
-  gem "capistrano"
-  gem "capistrano-rbenv", :git => 'https://github.com/capistrano/rbenv.git'
-  gem "capistrano-rails"
-  gem "capistrano-postgresql"
-  gem "capistrano-bundler"
-  gem "capistrano3-unicorn" 
+  gem 'capistrano'
+  gem 'capistrano-rbenv', :git => 'https://github.com/capistrano/rbenv.git'
+  gem 'capistrano-rails'
+  gem 'capistrano-postgresql'
+  gem 'capistrano-bundler'
+  gem 'capistrano3-unicorn' 
 end
 
 run 'bundle install --quiet'
