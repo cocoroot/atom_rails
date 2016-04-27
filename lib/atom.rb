@@ -243,12 +243,17 @@ module Atom
 
     def create_framework_js
       redux_root_dir = "#{FRONTEND_JAVASCRIPT_PATH}/components"
-      copy_file "#{redux_root_dir}/containers/AppContainer.js", "#{redux_root_dir}/containers/AppContainer.js"
-      copy_file "#{redux_root_dir}/containers/Root.js", "#{redux_root_dir}/containers/Root.js"
-      copy_file "#{redux_root_dir}/components/App.js", "#{redux_root_dir}/components/App.js"
-      copy_file "#{redux_root_dir}/actions/index.js", "#{redux_root_dir}/actions/index.js"
-      copy_file "#{redux_root_dir}/reducers/index.js", "#{redux_root_dir}/reducers/index.js"
-      copy_file "#{redux_root_dir}/store/configureStore.js", "#{redux_root_dir}/store/configureStore.js"
+      [
+        "#{redux_root_dir}/containers/AppConnector.js",
+        "#{redux_root_dir}/containers/Root.js",
+        "#{redux_root_dir}/components/index.js",
+        "#{redux_root_dir}/components/App.js",
+        "#{redux_root_dir}/actions/index.js",
+        "#{redux_root_dir}/reducers/index.js",
+        "#{redux_root_dir}/store/configureStore.js"
+      ].each do |path|
+        copy_file path, path
+      end
     end
   end
 end
