@@ -246,7 +246,7 @@ module Atom
       [
         "#{redux_root_dir}/containers/AppConnector.js",
         "#{redux_root_dir}/containers/Root.js",
-        "#{redux_root_dir}/components/index.js",
+        "#{redux_root_dir}/containers/index.js",
         "#{redux_root_dir}/components/App.js",
         "#{redux_root_dir}/actions/index.js",
         "#{redux_root_dir}/reducers/index.js",
