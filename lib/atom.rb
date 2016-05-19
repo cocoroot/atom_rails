@@ -112,6 +112,15 @@ module Atom
       empty_directory 'db/schema'
     end
 
+    def create_schema_generator
+      copy_file 'lib/generators/rails/schemafile/schemafile_generator.rb', 'lib/generators/rails/schemafile/schemafile_generator.rb'
+      copy_file 'lib/generators/rails/schemafile/templates/create_table_schemafile.rb', 'lib/generators/rails/schemafile/templates/create_table_schemafile.rb'
+      application do
+        'config.generators { |g| g.orm :schemafile }'
+      end
+      append_to_file '.gitignore', 'db/migrate/*.bak'
+    end
+
     def rspec_init
       run "#{File.join('bin', 'rails')} generate rspec:install"
     end

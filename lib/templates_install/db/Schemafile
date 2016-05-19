@@ -1,2 +1,2 @@
 # Schemafile
-#   require 'schema/user.schema'
+Dir[File.dirname(File.expand_path(__FILE__)) + '/schema/*.rb'].each { |file| require file }
