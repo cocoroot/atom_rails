@@ -121,6 +121,10 @@ module Atom
       append_to_file '.gitignore', 'db/migrate/*.bak'
     end
 
+    def overwrite_db_migration_command
+      copy_file 'lib/tasks/ridgepole.rake', 'lib/tasks/ridgepole.rake'
+    end
+
     def rspec_init
       run "#{File.join('bin', 'rails')} generate rspec:install"
     end
